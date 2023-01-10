@@ -22,14 +22,23 @@ static status_t read_block(FILE *src, block_t *data)
 }
 
 
-typedef status_t (*crypt_func_t)(block_t*, const block_t*);
-static status_t crypt_file(FILE *src, FILE *dst, crypt_func_t crypt_func, size_t bytes)
+status_t read_key(block_t *key, FILE *src)
 {
-    status_t res;
-    block_t data;
-    const static block_t cipher_key = {{-454430834, -762685917, 249668894, -687125378}, 4};
+    status_t res = ok;
+    if (key == NULL || src == NULL)
+        res = null_pointer_error;
+    else if (fread(key, sizeof(word_t), 4, src) != sizeof(word_t) * 4)
+        res = key_read_error;
+    return res;
+}
 
-    for (res = read_block(src, &data); res == ok && data.size && bytes > 0; res = read_block(src, &data))
+typedef status_t (*crypt_func_t)(block_t*, const block_t*);
+static status_t crypt_file(FILE *src, FILE *dst, FILE *key, crypt_func_t crypt_func, size_t bytes)
+{
+    block_t data, cipher_key;
+    status_t res = read_key(&cipher_key, key);
+
+    if (res) for (res = read_block(src, &data); res == ok && data.size && bytes > 0; res = read_block(src, &data))
     {
         int write = bytes > 15 ? 16 : bytes;
         bytes -= write;
@@ -40,13 +49,13 @@ static status_t crypt_file(FILE *src, FILE *dst, crypt_func_t crypt_func, size_t
     return res;
 }
 
-status_t encrypt_file(FILE *src, FILE *dst)
+status_t encrypt_file(FILE *src, FILE *dst, FILE *key)
 {
     status_t res;
     long long size = 0;
     
     fwrite(&size, sizeof(size_t), 1, dst);
-    res = crypt_file(src, dst, encrypt_block, -1ULL);
+    res = crypt_file(src, dst, key, encrypt_block, -1ULL);
 
     size = ftell(src);
     if (res == ok)
@@ -57,9 +66,9 @@ status_t encrypt_file(FILE *src, FILE *dst)
     return res;
 }
 
-status_t decrypt_file(FILE *src, FILE *dst)
+status_t decrypt_file(FILE *src, FILE *dst, FILE *key)
 {
     size_t size = 0;
     fread(&size, sizeof(size_t), 1, src);
-    return crypt_file(src, dst, decrypt_block, size);
+    return crypt_file(src, dst, key, decrypt_block, size);
 }

@@ -4,11 +4,11 @@
 int main(int argc, char **argv)
 {
     status_t res = ok;
-    if (argc != 4)
+    if (argc != 5)
         res = argv_error;
     else
     {
-        FILE *src, *dst;
+        FILE *src, *dst, *key;
         if ((src = fopen(argv[2], "rb")) == NULL)
             res = unknown_file;
         else if ((dst = fopen(argv[3], "wb")) == NULL)
@@ -16,17 +16,24 @@ int main(int argc, char **argv)
             res = unknown_file;
             fclose(src);
         }
+        else if((key = fopen(argv[4], "rb")) == NULL)
+        {
+            res = unknown_file;
+            fclose(src);
+            fclose(dst);
+        }
         else
         {
             if (!strcmp(argv[1], "encrypt"))
-                res = encrypt_file(src, dst);
+                res = encrypt_file(src, dst, key);
             else if (!strcmp(argv[1], "decrypt"))
-                res = decrypt_file(src, dst);
+                res = decrypt_file(src, dst, key);
             else
                 res = unknown_command;
 
             fclose(src);
             fclose(dst);
+            fclose(key);
         }
     }
     return res;

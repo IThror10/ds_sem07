@@ -6,6 +6,7 @@
         ok,
         argv_error,
         unknown_file,
+        key_read_error,
         unknown_command,
         null_pointer_error,
     } status_t;

@@ -4,7 +4,7 @@
     #include <stdio.h>
     #include "status.h"
 
-    status_t encrypt_file(FILE *src, FILE *dst);
-    status_t decrypt_file(FILE *src, FILE *dst);
+    status_t encrypt_file(FILE *src, FILE *dst, FILE *key);
+    status_t decrypt_file(FILE *src, FILE *dst, FILE *key);
 
 #endif //__WORK_H__
