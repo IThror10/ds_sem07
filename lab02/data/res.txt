@@ -1,0 +1,3 @@
+Some text to be encrypted with Enigma
+Немного по-русски
+Точка
